@@ -41,21 +41,37 @@ def get_student(id: str, service=Depends(get_student_db)):
     ).to_json()
 
 
-# @student_router.get("/enrollment/{id}", response_model=ResponseTemplate[Student])
-# def get_student_enrollment(
-#     id: str, service=Depends(get_student_db), enrollment_db=Depends(get_enrollment_db)
-# ):
-#     res = service.get(id)
-#     if res is None:
-#         return ErrorTemplate(
-#             "No student with this id found {}".format(id), "Retrieval error"
-#         ).to_json()
+@student_router.get("/name/{name}", response_model=ResponseTemplate[Student])
+def get_student_name(name: str, service=Depends(get_student_db)):
+    res = service.get_by_name(name)
+    if res is None:
+        return ErrorTemplate(
+            "No student with this name found {}".format(name), "Retrieval error"
+        ).to_json()
 
-#     enrollment = enrollment_db.get_by_student(res.id)
-#     return ResponseTemplate(
-#         enrollment,
-#         "successfully retrieved student enrollment with id {}".format(id),
-#     ).to_json()
+    return ResponseTemplate(
+        res,
+        "successfully retrieved student with name {}".format(name),
+    ).to_json()
+
+
+@student_router.get(
+    "/enrollment/{student_id}/list", response_model=ResponseTemplate[Student]
+)
+def get_student_enrollment(
+    id: str, service=Depends(get_student_db), enrollment_db=Depends(get_enrollment_db)
+):
+    res = service.get(id)
+    if res is None:
+        return ErrorTemplate(
+            "No student with this id found {}".format(id), "Retrieval error"
+        ).to_json()
+
+    enrollment = enrollment_db.get_by_student(id)
+    return ResponseTemplate(
+        enrollment,
+        "successfully retrieved student enrollment with id {}".format(id),
+    ).to_json()
 
 
 @student_router.post("/enrollment", response_model=ResponseTemplate[EnrollStudent])

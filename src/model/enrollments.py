@@ -109,6 +109,7 @@ class EnrollmentDBHandler:
             return result
 
     def get_by_student(self, student_id: str) -> list[Enrollment]:
+        print("stu", student_id)
         with self.connect() as conn:
             raw_list = conn.execute(
                 """

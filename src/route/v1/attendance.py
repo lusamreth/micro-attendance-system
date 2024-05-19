@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from src.model.attendance import Attendance, create_attd
+from src.model.attendance import Attendance, AttendanceJoinStudent, create_attd
 from src.response import ResponseTemplate
 from src.route.providers.base import get_attendance_db
 from src.schema.attendance import CreateAttendance
@@ -20,6 +20,18 @@ def list_attendance(service=Depends(get_attendance_db)):
 def list_attendance_by_class(class_id, service=Depends(get_attendance_db)):
     res = service.list_by_classroom(class_id)
     return ResponseTemplate(res, "Successfully retrieved attendance")
+
+
+@attendance_router.get(
+    "/classroom/subject/{subject_name}",
+    # response_model=ResponseTemplate[list[AttendanceJoinStudent]],
+)
+def list_attendance_by_subject(subject_name, service=Depends(get_attendance_db)):
+    res = service.get_by_subject(subject_name)
+    return ResponseTemplate(
+        res,
+        "Successfully retrieved attendance",
+    )
 
 
 @attendance_router.post("/")

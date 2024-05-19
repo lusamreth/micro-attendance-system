@@ -29,6 +29,16 @@ class Attendance(BaseModel):
     punctuality: Punctuality
 
 
+class AttendanceJoinStudent(BaseModel):
+    id: str
+    enrollment_id: str
+    last_record: float
+    entry_time: float
+    punctuality: Punctuality
+    firstname: str
+    lastname: str
+
+
 class AttendanceJoinClass(Classroom):
     id: str
     enrollment_id: str
@@ -232,6 +242,36 @@ class AttendanceDBHandler:
                     last_record=row[2],
                     entry_time=row[3],
                     punctuality=row[4],
+                )
+                return result
+            return None
+
+    def get_by_subject(self, subject: str):
+        with self.connect() as conn:
+            # attendance.id,enrollment.id,entry_time,last_record,punctuality,student.firstname,student.lastname
+            single_res = conn.execute(
+                """
+                    SELECT
+                    attendance.id,enrollment.id,entry_time,last_record,punctuality,student.firstname,student.lastname,classroom.subject_name
+                    FROM attendance 
+                    JOIN enrollment ON enrollment.id = attendance.enrollment_id
+                    JOIN student ON student.id = enrollment.student_id
+                    JOIN classroom ON classroom.id = enrollment.class_id
+                    WHERE subject_name = ?
+                """,
+                (subject,),
+            )
+            row = single_res.fetchone()
+
+            if row:
+                result = AttendanceJoinStudent(
+                    id=row[0],
+                    enrollment_id=row[1],
+                    last_record=row[2],
+                    entry_time=row[3],
+                    punctuality=row[4],
+                    firstname=row[5],
+                    lastname=row[6],
                 )
                 return result
             return None

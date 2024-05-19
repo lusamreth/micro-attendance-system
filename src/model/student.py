@@ -79,6 +79,26 @@ class StudentDBHandler:
             )
             conn.commit()
 
+    def get_by_name(self, fullname: str):
+        with self.connect() as conn:
+            firstname, lastname = fullname.split(" ")
+            with self.connect() as conn:
+                single_res = conn.execute(
+                    "SELECT * FROM student WHERE firstname = ? AND lastname = ?",
+                    (firstname, lastname),
+                )
+                row = single_res.fetchone()
+                if row:
+                    result = Student(
+                        id=row[0],
+                        firstname=row[1],
+                        lastname=row[2],
+                        generation=row[3],
+                        gender=row[4],
+                    )
+                    return result
+                return None
+
     def create_many(self, student_list: list[Student]):
         with self.connect() as conn:
             for student in student_list:
