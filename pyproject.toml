@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "micro-attendance-system"
+version = "0.1.0"
+description = ""
+authors = ["lusamreth <somrethoverkill@gmail.com>"]
+readme = "README.md"
+packages = [{include = "src"}]
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.111.0"
+uvicorn = {extras = ["standard"], version = "^0.29.0"}
+pydantic = "^2.7.1"
+requests = "^2.31.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+start = "src.app:main"

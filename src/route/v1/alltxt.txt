@@ -1,0 +1,182 @@
+router.py:from fastapi import APIRouter
+router.py:
+router.py:from .attendance import attendance_router
+router.py:from .classroom import classroom_router
+router.py:from .student import student_router
+router.py:
+router.py:
+router.py:def init_router(app: APIRouter):
+router.py:    app.include_router(student_router, prefix="/students", tags=["students"])
+router.py:    app.include_router(attendance_router, prefix="/attendances", tags=["attendances"])
+router.py:    app.include_router(classroom_router, prefix="/classrooms", tags=["classrooms"])
+attendance.py:from fastapi import APIRouter, Depends
+attendance.py:
+attendance.py:from src.model.attendance import Attendance, create_attd
+attendance.py:from src.response import ResponseTemplate
+attendance.py:from src.route.providers.base import get_attendance_db
+attendance.py:from src.schema.attendance import CreateAttendance
+attendance.py:
+attendance.py:attendance_router = APIRouter()
+attendance.py:
+attendance.py:
+attendance.py:@attendance_router.get("/", response_model=ResponseTemplate[list[Attendance]])
+attendance.py:def list_attendance(service=Depends(get_attendance_db)):
+attendance.py:    res = service.list_attendance()
+attendance.py:    return ResponseTemplate(res, "Successfully retrieved attendance")
+attendance.py:
+attendance.py:
+attendance.py:@attendance_router.get(
+attendance.py:    "/classroom/{class_id}", response_model=ResponseTemplate[list[Attendance]]
+attendance.py:)
+attendance.py:def list_attendance_by_class(class_id, service=Depends(get_attendance_db)):
+attendance.py:    res = service.list_by_classroom(class_id)
+attendance.py:    return ResponseTemplate(res, "Successfully retrieved attendance")
+attendance.py:
+attendance.py:
+attendance.py:@attendance_router.post("/")
+attendance.py:def take_attendance(
+attendance.py:    attendance_data: list[CreateAttendance], service=Depends(get_attendance_db)
+attendance.py:):
+attendance.py:    attendances = []
+attendance.py:    for attend in attendance_data:
+attendance.py:        attendances.append(create_attd(**attend.model_dump()))
+attendance.py:
+attendance.py:    res = service.create_many(attendances)
+attendance.py:    return ResponseTemplate(res, "Successfully attend attendance")
+classroom.py:from fastapi import APIRouter, Depends
+classroom.py:
+classroom.py:from src.model.classroom import Classroom, create_classroom
+classroom.py:from src.response import ErrorTemplate, ResponseTemplate
+classroom.py:from src.route.providers.base import get_classroom_db
+classroom.py:from src.schema.classroom import CreateClassroom
+classroom.py:
+classroom.py:classroom_router = APIRouter()
+classroom.py:
+classroom.py:
+classroom.py:@classroom_router.get("/", response_model=ResponseTemplate[list[Classroom]])
+classroom.py:def list_classroom_names(service=Depends(get_classroom_db)):
+classroom.py:    res = service.list()
+classroom.py:    return ResponseTemplate(res, "Successfully retrieved classrooms").to_json()
+classroom.py:
+classroom.py:
+classroom.py:@classroom_router.post("/", response_model=ResponseTemplate[list[Classroom]])
+classroom.py:def register_classroom(
+classroom.py:    classroom_list: list[CreateClassroom], service=Depends(get_classroom_db)
+classroom.py:):
+classroom.py:    classrooms = []
+classroom.py:    for classroom_data in classroom_list:
+classroom.py:        classrooms.append(create_classroom(**classroom_data.model_dump()))
+classroom.py:
+classroom.py:    res = service.create_many(classrooms)
+classroom.py:    return ResponseTemplate(res, "Successfully registered classrooms").to_json()
+classroom.py:
+classroom.py:
+classroom.py:@classroom_router.get("/{id}", response_model=ResponseTemplate[Classroom])
+classroom.py:def get_classroom(id: str, service=Depends(get_classroom_db)):
+classroom.py:    res = service.get(id)
+classroom.py:    if res is None:
+classroom.py:        return ErrorTemplate(
+classroom.py:            "No classroom with this id found {}".format(id), "Retrieval error"
+classroom.py:        ).to_json()
+classroom.py:
+classroom.py:    return ResponseTemplate(
+classroom.py:        res,
+classroom.py:        "Successfully retrieved classroom with id {}".format(id),
+classroom.py:    ).to_json()
+student.py:from fastapi import APIRouter, Depends
+student.py:
+student.py:from src.model.enrollments import Enrollment, create_enrollment
+student.py:from src.model.student import Student, create_stud
+student.py:from src.response import ErrorTemplate, ResponseTemplate
+student.py:from src.route.providers.base import get_enrollment_db, get_student_db
+student.py:from src.schema.student import CreateStudent, EnrollStudent
+student.py:
+student.py:student_router = APIRouter()
+student.py:
+student.py:
+student.py:@student_router.get("/", response_model=ResponseTemplate[list[Student]])
+student.py:def list_student_names(service=Depends(get_student_db)):
+student.py:    res = service.list()
+student.py:    return ResponseTemplate(res, "successfully retrieved students").to_json()
+student.py:
+student.py:
+student.py:@student_router.post("/", response_model=ResponseTemplate[list[Student]])
+student.py:def register_student(
+student.py:    student_list: list[CreateStudent], service=Depends(get_student_db)
+student.py:):
+student.py:    students = []
+student.py:    for student_data in student_list:
+student.py:        students.append(create_stud(**student_data.model_dump()))
+student.py:
+student.py:    res = service.create_many(students)
+student.py:    return ResponseTemplate(res, "successfully register students").to_json()
+student.py:
+student.py:
+student.py:@student_router.get("/{id}", response_model=ResponseTemplate[Student])
+student.py:def get_student(id: str, service=Depends(get_student_db)):
+student.py:    res = service.get(id)
+student.py:    if res is None:
+student.py:        return ErrorTemplate(
+student.py:            "No student with this id found {}".format(id), "Retrieval error"
+student.py:        ).to_json()
+student.py:
+student.py:    return ResponseTemplate(
+student.py:        res,
+student.py:        "successfully retrieved student with id {}".format(id),
+student.py:    ).to_json()
+student.py:
+student.py:
+student.py:@student_router.get("/enrollment/{id}", response_model=ResponseTemplate[Student])
+student.py:def get_student_enrollment(
+student.py:    id: str, service=Depends(get_student_db), enrollment_db=Depends(get_enrollment_db)
+student.py:):
+student.py:    res = service.get(id)
+student.py:    if res is None:
+student.py:        return ErrorTemplate(
+student.py:            "No student with this id found {}".format(id), "Retrieval error"
+student.py:        ).to_json()
+student.py:
+student.py:    enrollment = enrollment_db.get_by_student(res.id)
+student.py:    return ResponseTemplate(
+student.py:        enrollment,
+student.py:        "successfully retrieved student enrollment with id {}".format(id),
+student.py:    ).to_json()
+student.py:
+student.py:
+student.py:@student_router.post("/{id}/enrollment", response_model=ResponseTemplate[EnrollStudent])
+student.py:def enroll_student(
+student.py:    enroll: EnrollStudent,
+student.py:    service=Depends(get_student_db),
+student.py:    enrollment_db=Depends(get_enrollment_db),
+student.py:):
+student.py:    res = service.get(enroll.student_id)
+student.py:    if res is None:
+student.py:        return ErrorTemplate(
+student.py:            "No student with this id found {}".format(id), "Retrieval error"
+student.py:        ).to_json()
+student.py:
+student.py:    enrollment = enrollment_db.create(create_enrollment(**enroll.model_dump()))
+student.py:    return ResponseTemplate(
+student.py:        enrollment,
+student.py:        "successfully enroll student with id {}".format(id),
+student.py:    ).to_json()
+student.py:
+student.py:
+student.py:@student_router.get(
+student.py:    "/enrollment/{enroll_id}", response_model=ResponseTemplate[EnrollStudent]
+student.py:)
+student.py:def get_enroll_student_info(
+student.py:    enroll: EnrollStudent,
+student.py:    service=Depends(get_student_db),
+student.py:    enrollment_db=Depends(get_enrollment_db),
+student.py:):
+student.py:    res = enrollment_db.get_join_by_enrollment_id(enroll.student_id)
+student.py:    if res is None:
+student.py:        return ErrorTemplate(
+student.py:            "No enrollment with this id found {}".format(id), "Retrieval error"
+student.py:        ).to_json()
+student.py:
+student.py:    return ResponseTemplate(
+student.py:        res,
+student.py:        "Result of enrollment with id {}".format(id),
+student.py:    ).to_json()
