@@ -112,10 +112,10 @@ def fetch_class(subject):
 
 def create_class():
     class_info = collect_classroom_info()
-    result = fetch_class(class_info["subject_name"])
+    # result = fetch_class(class_info["subject_name"])
     # fatal error right here
-    if result is not None and result["data"] is not None:
-        return [result["data"]]
+    # if result is not None and result["data"] is not None:
+    #     return [result["data"]]
 
     try:
         # Replace 'your_attendance_api_url' with your actual API endpoint
