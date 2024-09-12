@@ -1,4 +1,5 @@
 import sqlite3
+import time
 import uuid
 from collections.abc import Callable
 from datetime import datetime
@@ -64,26 +65,58 @@ def create_attd(
     )
 
 
+from datetime import datetime
+
+
+def ts_hour_greater(ts1, ts2, equal=False):
+    dto1 = datetime.fromtimestamp(ts1)
+    dto2 = datetime.fromtimestamp(ts2)
+    if equal:
+        return dto1.hour >= dto2.hour
+    return dto1.hour > dto2.hour
+
+
+def ts_minute_greater(ts1, ts2, equal=False):
+    dto1 = datetime.fromtimestamp(ts1)
+    dto2 = datetime.fromtimestamp(ts2)
+
+    if equal:
+        return dto1.minute >= dto2.minute
+    return dto1.minute > dto2.minute
+
+
 def justify_punctuality(attendance: Attendance, classroom: Classroom):
-    lect_end_time = classroom.lecture_time
+    # lecture_time could be like 5:00 or 12:00 (0->23)
+    lect_end_time = classroom.lecture_time  # hours + minutes -> minutes
     acceptable_late = classroom.late_penalty_duration
     entry_time = attendance.entry_time
     latable_time = acceptable_late + lect_end_time
     punc = attendance.punctuality
+    entry_dto = datetime.fromtimestamp(entry_time)
+    lect_dto = datetime.fromtimestamp(lect_end_time)
     print(
         "ENNN",
         datetime.fromtimestamp(entry_time),
         datetime.fromtimestamp(lect_end_time),
     )
 
-    if entry_time >= (classroom.duration + lect_end_time):
-        punc = Punctuality.ABSENT
-        return str(punc)
-
-    if entry_time > latable_time:
-        punc = Punctuality.LATE
+    # Check if the entry time is in the same hour as the lecture end time
+    if entry_dto.hour == lect_dto.hour:
+        # Check if the entry time is after the lecture end time
+        if entry_dto.minute > lect_dto.minute:
+            # Check if the entry time is within the acceptable late period
+            if entry_dto.minute <= (lect_dto.minute + latable_time):
+                punc = Punctuality.LATE
+            else:
+                punc = Punctuality.ABSENT
+        else:
+            punc = Punctuality.ONTIME
     else:
-        punc = Punctuality.ONTIME
+        # Handle the case where the entry time and lecture end time are in different hours
+        if entry_dto.hour > lect_dto.hour:
+            punc = Punctuality.ABSENT
+        else:
+            punc = Punctuality.ONTIME
 
     if punc == Punctuality.AUTO:
         punc = Punctuality.ONTIME
@@ -100,12 +133,14 @@ def update_attd(old: Attendance, modified: AttendanceModifiable) -> Attendance:
     return Attendance(
         id=old.id,
         enrollment_id=old.enrollment_id,
-        last_record=modified.last_record
-        if modified.last_record is not None
-        else old.last_record,
-        entry_time=modified.entry_time
-        if modified.entry_time is not None
-        else old.entry_time,
+        last_record=(
+            modified.last_record
+            if modified.last_record is not None
+            else old.last_record
+        ),
+        entry_time=(
+            modified.entry_time if modified.entry_time is not None else old.entry_time
+        ),
         punctuality=old.punctuality,
     )
 
@@ -275,6 +310,33 @@ class AttendanceDBHandler:
                 )
                 return result
             return None
+
+    def get_by_student(self, student_id) -> list[Attendance]:
+        with self.connect() as conn:
+            # attendance.id,enrollment.id,entry_time,last_record,punctuality,student.firstname,student.lastname
+            single_res = conn.execute(
+                """
+                    SELECT * FROM attendance 
+                    JOIN enrollment e ON e.id = attendance.enrollment_id
+                    JOIN student s ON s.id = e.student_id
+                    WHERE s.id = ?
+                """,
+                (student_id,),
+            )
+
+            rows = single_res.fetchall()
+            results = []
+            if rows:
+                for row in rows:
+                    result = Attendance(
+                        id=row[0],
+                        enrollment_id=row[1],
+                        last_record=row[2],
+                        entry_time=row[3],
+                        punctuality=row[4],
+                    )
+                    results.append(result)
+            return results
 
     def list_attendance(self) -> list[Attendance]:
         with self.connect() as conn:

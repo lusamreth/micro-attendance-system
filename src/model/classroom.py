@@ -6,6 +6,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+# to calculate end time =
 class Classroom(BaseModel):
     id: str
     lecturer_name: str
@@ -66,19 +67,27 @@ def update_classroom(old: Classroom, modified: ClassroomModifiable) -> Classroom
     return Classroom(
         id=old.id,
         lecturer_name=old.lecturer_name,
-        subject_name=modified.subject_name
-        if modified.subject_name is not None
-        else old.subject_name,
+        subject_name=(
+            modified.subject_name
+            if modified.subject_name is not None
+            else old.subject_name
+        ),
         duration=modified.duration if modified.duration is not None else old.duration,
-        lecture_time=modified.lecture_time
-        if modified.lecture_time is not None
-        else old.lecture_time,
-        late_penalty_duration=modified.late_penalty_duration
-        if modified.late_penalty_duration is not None
-        else old.late_penalty_duration,
-        record_interval=modified.record_interval
-        if modified.record_interval is not None
-        else old.record_interval,
+        lecture_time=(
+            modified.lecture_time
+            if modified.lecture_time is not None
+            else old.lecture_time
+        ),
+        late_penalty_duration=(
+            modified.late_penalty_duration
+            if modified.late_penalty_duration is not None
+            else old.late_penalty_duration
+        ),
+        record_interval=(
+            modified.record_interval
+            if modified.record_interval is not None
+            else old.record_interval
+        ),
     )
 
 
@@ -178,6 +187,7 @@ class ClassroomDBHandler:
         with self.connect() as conn:
             exec = conn.execute("DELETE FROM classroom WHERE id = ?", (id,))
             conn.commit()
+            print(exec.rowcount)
             return exec.rowcount
 
     def get(self, id: str) -> Classroom | None:
