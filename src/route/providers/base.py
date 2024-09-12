@@ -1,5 +1,6 @@
 from src.db import init_db_root, open_db
 from src.model.attendance import AttendanceDBHandler
+from src.model.attendance_detail import AttendanceDetailDBHandler
 from src.model.classroom import ClassroomDBHandler
 from src.model.enrollments import EnrollmentDBHandler
 from src.model.student import StudentDBHandler
@@ -25,4 +26,9 @@ def get_classroom_db():
 
 def get_enrollment_db():
     enrollmentDB = EnrollmentDBHandler(conn=open_db)
+    return enrollmentDB
+
+
+def get_stats_db():
+    enrollmentDB = AttendanceDetailDBHandler(conn=open_db)
     return enrollmentDB
