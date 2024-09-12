@@ -38,3 +38,17 @@ def get_classroom(id: str, service=Depends(get_classroom_db)):
         res,
         "Successfully retrieved classroom with id {}".format(id),
     ).to_json()
+
+
+@classroom_router.delete("/{id}", response_model=ResponseTemplate[Classroom])
+def delete_classroom(id: str, service=Depends(get_classroom_db)):
+    res = service.delete(id)
+    if res is None or res == 0:
+        return ErrorTemplate(
+            "No classroom with this id found {}".format(id), "Retrieval error"
+        ).to_json()
+
+    return ResponseTemplate(
+        res,
+        "Successfully retrieved classroom with id {}".format(id),
+    ).to_json()
