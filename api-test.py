@@ -55,6 +55,7 @@ class_data = class_response.json()["data"]
 student_data = [
     generate_random_student_data() for _ in range(5)
 ]  # Generate 5 random students
+print(student_data)
 response = requests.post(f"{base_url}/students/", json=student_data)
 if response.status_code == 200:
     print("Students created successfully!")
@@ -73,7 +74,7 @@ for student in classrooms:
 enrollment_result = []
 for enroll in enrollment_data:
     sid = enroll["student_id"]
-    response = requests.post(f"{base_url}/students/{sid}/enrollment/", json=enroll)
+    response = requests.post(f"{base_url}/students/enrollment/", json=enroll)
     print(response.json())
     if response.status_code == 200:
         print("Students enrolled successfully!")
@@ -81,6 +82,7 @@ for enroll in enrollment_data:
     else:
         print("Failed to enroll students. Status code:", response.status_code)
 
+print(enrollment_result)
 # Step 4: Create Attendance
 attendance_data = [
     generate_random_attendance_data(random.choice(enrollment_result)["id"])
@@ -97,7 +99,8 @@ else:
 
 # Step 5: Fetch Student Info by Enrollment ID
 enrollment_id = random.choice(enrollment_data)["student_id"]
-response = requests.get(f"{base_url}/students//enrollment/{enrollment_id}")
+response = requests.get(f"{base_url}/students/enrollment/{enrollment_id}")
+
 if response.status_code == 200:
     print("Student info fetched successfully by enrollment ID!")
     print(response.json())

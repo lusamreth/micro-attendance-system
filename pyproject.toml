@@ -5,6 +5,7 @@ description = ""
 authors = ["lusamreth <somrethoverkill@gmail.com>"]
 readme = "README.md"
 packages = [{include = "src"}]
+
 [tool.poetry.dependencies]
 python = "^3.11"
 fastapi = "^0.111.0"
