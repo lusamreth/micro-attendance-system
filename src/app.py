@@ -9,6 +9,7 @@ from src.route.providers.base import (
     get_attendance_db,
     get_classroom_db,
     get_enrollment_db,
+    get_stats_db,
     get_student_db,
 )
 from src.route.v1.router import init_router
@@ -19,7 +20,10 @@ init_router(app.router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "https://micro-attendance-system.rethlu.pro/",
+        "http://localhost:3333",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -29,11 +33,13 @@ stud_db = get_student_db()
 attd_db = get_attendance_db()
 class_db = get_classroom_db()
 enroll_db = get_enrollment_db()
+stat_db = get_stats_db()
 
 stud_db.init_table()
 attd_db.init_table()
 class_db.init_table()
 enroll_db.init_table()
+stat_db.init_table()
 
 init_global_exception_handlers(app)
 
